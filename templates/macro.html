@@ -1,0 +1,14 @@
+{% macro render_field(field) %}
+  <div class="row">
+    <div class="input-field col s12">
+      {% if field.errors %}
+        {% for error in field.errors %}
+          <div class="notification-error"> {{ error }} </div>
+        {% endfor %}
+      {% endif %}
+      <!-- <input placeholder="Placeholder" id="first_name" type="text" class="validate"> -->
+      {{ field(placeholder=field.label.text) }}
+
+    </div>
+  </div>
+{% endmacro %}
