@@ -11,16 +11,63 @@
     <body>
       <nav>
         <div class="nav-wrapper">
-          <a href="#" class="brand-logo">Logo</a>
+          <a href="{{ url_for('index') }}" class="brand-logo">
+            <img src="{{ url_for('static', filename = 'images/logo.png') }}" alt="">
+          </a>
           <ul id="nav-mobile" class="right hide-on-med-and-down">
-            <li><a href="sass.html">Login</a></li>
+            {% if current_user.is_authenticated %}
+              <li>
+                <a class="dropdown-button" href="#!" data-activates="user-profile">
+                  {{ current_user.username }}
+                  <i class="material-icons right">arrow_drop_down</i>
+                </a>
+              </li>
+
+              <ul id="user-profile" class="dropdown-content">
+                <li><a href="#!">My Game</a></li>
+                <li class="divider"></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+              </ul>
+            {% else %}
+              <li><a href="/user/login">Login</a></li>
+            {% endif %}
           </ul>
         </div>
       </nav>
       <div class="container">
+
+
+        {% with messages = get_flashed_messages(with_categories = True) %}
+          {% if messages %}
+            {% for category, message in messages%}
+              <div class="notification-message" data-message="{{ message }}">
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         {% block body %} {% endblock %}
+        {% if current_user.is_authenticated %}
+          <div class="fixed-action-btn">
+            <div class="right-align">
+              <a href="{{ url_for('new_game') }}" class="btn-floating btn-large waves-effect waves-light red "><i class="material-icons">add</i></a>
+            </div>
+          </div>
+
+        {% endif %}
       </div>
       <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+      <script type="text/javascript" src="/static/javascripts/common.js" ></script>
+      <div id="fb-root"></div>
+      <script>
+        (function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) return;
+          js = d.createElement(s); js.id = id;
+          js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.8&appId=558631410986855";
+          fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+      </script>
     </body>
   </html>

@@ -1,6 +1,6 @@
 from flask import Flask, g, render_template, flash, redirect, url_for
 from flask_bcrypt import check_password_hash
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 
 import forms
 import models
@@ -10,11 +10,11 @@ app.secret_key = '1234567890'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'user/login'
+login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     try:
-        models.User.get(models.User.id == user_id)
+        return models.User.get(models.User.id == user_id)
     except models.DoesNotExist:
         return None
 
@@ -22,6 +22,7 @@ def load_user(user_id):
 def before_request():
     g.db = models.DATABASE
     g.db.connect()
+    g.user = current_user
 
 @app.after_request
 def after_request(response):
@@ -30,7 +31,8 @@ def after_request(response):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    games = models.Game.select()
+    return render_template('index.html', games = games)
 
 @app.route('/user/register', methods = ['GET', 'POST'])
 def register():
@@ -50,6 +52,7 @@ def login():
             user = models.User.get(models.User.username == form.username.data)
         except models.DoesNotExist:
             flash("Could not found email or password", "alert")
+            return render_template("user/login.html", form = form)
         else:
             if check_password_hash(user.password, form.password.data):
                 login_user(user)
@@ -61,6 +64,32 @@ def login():
     else:
         return render_template("user/login.html", form = form)
 
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/new_game', methods = ['GET', 'POST'])
+@login_required
+def new_game():
+    form = forms.GameForm()
+    if form.validate_on_submit():
+        models.Game.create(
+                    name = form.name.data, description = form.description.data,
+                    logo = form.logo.data, embed_url = form.embed_url.data,
+                    user = g.user._get_current_object()
+                    )
+        flash("successfully added a game", 'notice')
+        return redirect(url_for('index'))
+    else:
+        return render_template('game/new_game.html', form = form)
+
+@app.route('/game/<name>')
+def game(name = None):
+    game = models.Game.get(models.Game.name == name)
+    return render_template('game/game.html', game = game)
 
 
 

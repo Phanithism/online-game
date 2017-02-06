@@ -12,6 +12,9 @@ class User(UserMixin, Model):
     class Meta:
         database = DATABASE
 
+    def get_games(self):
+        return Game.select().where(Game.user == self)
+
     @classmethod
     def new(cls, username, password):
         try:
@@ -22,11 +25,17 @@ class User(UserMixin, Model):
 class Game(Model):
     name = CharField(unique = True)
     embed_url = CharField(unique = True)
+    description = CharField()
     created_at = TimestampField(null = True)
     logo = CharField()
+    user = ForeignKeyField(rel_model = User, related_name = 'games')
 
     class Meta:
         database = DATABASE
+        order_by = ('-created_at',)
+
+    def get_user(self):
+        return User.where
 
 
 def initialize():
